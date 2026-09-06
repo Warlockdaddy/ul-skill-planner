@@ -96,6 +96,9 @@ function App() {
     "share" | "load" | null
   >(null);
   const [buildCodeInput, setBuildCodeInput] = useState("");
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
+  const [mobileTotalsOpen, setMobileTotalsOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
 
   useEffect(() => {
     if (buildFileMessage !== "Build loaded successfully.") return;
@@ -299,10 +302,28 @@ function App() {
             <h1>UL Skill Planner</h1>
           </div>
 
+          <div className="mobile-quick-status" aria-label="Current build status">
+            <span><strong>{availableSkillPoints}</strong> available</span>
+            <span>{getClassDisplayName(build.selectedClassId)}</span>
+          </div>
+
+          <button
+            type="button"
+            className="mobile-panel-toggle mobile-controls-toggle"
+            aria-expanded={mobileControlsOpen}
+            aria-controls="planner-header-controls"
+            onClick={() => setMobileControlsOpen((open) => !open)}
+          >
+            {mobileControlsOpen ? "Close" : "Menu"}
+          </button>
+
           <AttributeSummary build={build} skills={prototypeSkills} />
         </div>
 
-        <div className="header-right">
+        <div
+          id="planner-header-controls"
+          className={`header-right${mobileControlsOpen ? " header-right--mobile-open" : ""}`}
+        >
           <div className="point-summary">
             <div><span>Class</span><strong>{getClassDisplayName(build.selectedClassId)}</strong></div>
             <div><span>Total</span><strong>{totalSkillPoints}</strong></div>
@@ -372,8 +393,20 @@ function App() {
       </header>
 
       <section className="workspace workspace--three-column">
-        <aside className="build-panel">
-          <BuildTotals build={build} skills={prototypeSkills} />
+        <aside className={`build-panel${mobileTotalsOpen ? " mobile-panel--open" : ""}`}>
+          <button
+            type="button"
+            className="mobile-panel-toggle mobile-section-toggle"
+            aria-expanded={mobileTotalsOpen}
+            aria-controls="mobile-build-totals-content"
+            onClick={() => setMobileTotalsOpen((open) => !open)}
+          >
+            <span>Build Totals</span>
+            <span aria-hidden="true">{mobileTotalsOpen ? "−" : "+"}</span>
+          </button>
+          <div id="mobile-build-totals-content" className="mobile-collapsible-content">
+            <BuildTotals build={build} skills={prototypeSkills} />
+          </div>
         </aside>
 
         <SkillTree
@@ -387,8 +420,19 @@ function App() {
           onActivateSkill={handleActivateSkill}
         />
 
-        <aside className="help-panel">
-          <section className="instructions">
+        <aside className={`help-panel${mobileHelpOpen ? " mobile-panel--open" : ""}`}>
+          <button
+            type="button"
+            className="mobile-panel-toggle mobile-section-toggle"
+            aria-expanded={mobileHelpOpen}
+            aria-controls="mobile-planner-help-content"
+            onClick={() => setMobileHelpOpen((open) => !open)}
+          >
+            <span>How to use the planner</span>
+            <span aria-hidden="true">{mobileHelpOpen ? "−" : "+"}</span>
+          </button>
+          <div id="mobile-planner-help-content" className="mobile-collapsible-content">
+            <section className="instructions">
             <h2>How to use the planner</h2>
             <p>Select exactly one center class before purchasing skills.</p>
             <p>Hover over any node to see its description and bonuses.</p>
@@ -401,7 +445,8 @@ function App() {
               Remove every purchased branch skill before deselecting the active
               class.
             </p>
-          </section>
+            </section>
+          </div>
         </aside>
       </section>
 
