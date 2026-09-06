@@ -2507,3 +2507,22 @@ input:focus-visible {
   .build-totals__category--depth-2 { margin-left: 8px; }
   .build-totals__category-toggle { min-height: 38px; }
 }
+
+
+/* Search-result camera target */
+.skill-search__bonus::after {
+  flex: 0 0 auto;
+  color: #b9df72;
+  content: "›";
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.skill-node--selected.skill-node--search-match .skill-node__selection {
+  stroke: #f2d979;
+  stroke-width: 9;
+  filter:
+    drop-shadow(0 0 8px rgba(242, 217, 121, 0.95))
+    drop-shadow(0 0 18px rgba(185, 223, 114, 0.72));
+}

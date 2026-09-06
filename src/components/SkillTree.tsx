@@ -58,6 +58,7 @@ interface DragState {
 interface MatchingBonus {
   label: string;
   count: number;
+  skillIds: string[];
 }
 
 const MINIMUM_ZOOM = 1;
@@ -150,6 +151,7 @@ export function SkillTree({
   const [isDragging, setIsDragging] =
     useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [focusedSearchSkillId, setFocusedSearchSkillId] = useState<string | null>(null);
   const [
     hoveredSkillId,
     setHoveredSkillId,
@@ -172,7 +174,7 @@ export function SkillTree({
 
   const matchingBonuses = useMemo<MatchingBonus[]>(() => {
     if (!normalizedSearchQuery) return [];
-    const counts = new Map<string, number>();
+    const matches = new Map<string, string[]>();
     for (const skill of skills) {
       const seenInSkill = new Set<string>();
       for (const effect of skill.effects) {
@@ -181,11 +183,13 @@ export function SkillTree({
         if (!searchableBonusText(line).includes(normalizedSearchQuery)) continue;
         if (seenInSkill.has(line)) continue;
         seenInSkill.add(line);
-        counts.set(line, (counts.get(line) ?? 0) + 1);
+        const skillIds = matches.get(line) ?? [];
+        skillIds.push(skill.id);
+        matches.set(line, skillIds);
       }
     }
-    return [...counts.entries()]
-      .map(([label, count]) => ({ label, count }))
+    return [...matches.entries()]
+      .map(([label, skillIds]) => ({ label, count: skillIds.length, skillIds }))
       .sort((first, second) => {
         const keyCompare = bonusSortKey(first.label).localeCompare(
           bonusSortKey(second.label),
@@ -496,9 +500,30 @@ export function SkillTree({
       (toPreview && isSkillPurchased(build, edge.from));
   }
 
+  function focusSearchBonus(bonus: MatchingBonus) {
+    if (bonus.skillIds.length === 0) return;
+
+    const currentIndex = focusedSearchSkillId === null
+      ? -1
+      : bonus.skillIds.indexOf(focusedSearchSkillId);
+    const nextSkillId = bonus.skillIds[(currentIndex + 1) % bonus.skillIds.length];
+    const skill = findSkillById(skills, nextSkillId);
+    if (!skill) return;
+
+    const nextScale = 2.4;
+    setFocusedSearchSkillId(nextSkillId);
+    setHoveredSkillId(null);
+    setView({
+      scale: nextScale,
+      x: TREE_CENTER - skill.x * nextScale,
+      y: TREE_CENTER - skill.y * nextScale,
+    });
+  }
+
   function resetView() {
     setView(DEFAULT_VIEW);
     setHoveredSkillId(null);
+    setFocusedSearchSkillId(null);
   }
 
   function zoomFromCenter(
@@ -543,10 +568,14 @@ export function SkillTree({
           className="skill-search__input"
           type="search"
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(event) => {
+            setSearchQuery(event.target.value);
+            setFocusedSearchSkillId(null);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setSearchQuery("");
+              setFocusedSearchSkillId(null);
               event.currentTarget.blur();
             }
           }}
@@ -560,7 +589,10 @@ export function SkillTree({
           </span>
         ) : null}
         {searchQuery ? (
-          <button className="skill-search__clear" type="button" onClick={() => setSearchQuery("")} aria-label="Clear bonus search" title="Clear search">×</button>
+          <button className="skill-search__clear" type="button" onClick={() => {
+            setSearchQuery("");
+            setFocusedSearchSkillId(null);
+          }} aria-label="Clear bonus search" title="Clear search">×</button>
         ) : null}
         {normalizedSearchQuery && matchingBonuses.length > 0 ? (
           <div className="skill-search__bonuses">
@@ -573,8 +605,10 @@ export function SkillTree({
                   <button
                     type="button"
                     className="skill-search__bonus"
-                    onClick={() => setSearchQuery(bonus.label)}
-                    title={`Search for "${bonus.label}"`}
+                    onClick={() => focusSearchBonus(bonus)}
+                    title={bonus.count === 1
+                      ? "Center view on the matching node"
+                      : `Center view on a matching node; click again to cycle through ${bonus.count} nodes`}
                   >
                     <span className="skill-search__bonus-label">{bonus.label}</span>
                     <span className="skill-search__bonus-count">{bonus.count}</span>
@@ -824,8 +858,8 @@ export function SkillTree({
                 classRootAvailable ||
                 ordinarySkillAvailable;
               const skillIsSelected =
-                selectedSkillId ===
-                skill.id;
+                selectedSkillId === skill.id ||
+                focusedSearchSkillId === skill.id;
               const skillIsOnPreviewPath =
                 previewNodeIds.has(
                   skill.id,
