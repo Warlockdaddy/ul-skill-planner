@@ -22,11 +22,6 @@ function getClassBonusLines(skill: SkillNode): string[] {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  /*
-   * Class descriptions begin with a spaced banner such as E N F O R C E R.
-   * The class name is already rendered as the tooltip heading, so omit only
-   * that banner and preserve all localized bonus lines exactly as supplied.
-   */
   if (lines.length > 0) {
     const compactFirstLine = lines[0].replace(/\s+/g, "").toLowerCase();
     const compactName = skill.name.replace(/\s+/g, "").toLowerCase();
@@ -64,7 +59,6 @@ export function SkillTooltip({
     : 0;
   const lineGaps = Math.max(0, displayedLines.length - 1) * 10;
 
-  /* Reserve enough SVG height for all wrapped lines and the optional cost row. */
   const estimatedHeight = isClassNode
     ? 56 + nameLines * 52 + 22 + 34 + estimatedLines * 39 + lineGaps + 24 + 66 + 18
     : 56 + 34 + estimatedLines * 39 + lineGaps + 24 + 66 + 18;

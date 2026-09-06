@@ -10,21 +10,11 @@ type DisplayTotal = Total & { category: string; valueText?: string; valueSuffix?
 const MAXIMUM_HEALTH_STAT_ID = "increased-maximum-health";
 const CARRY_WEIGHT_STAT_ID = "carry-weight";
 
-/**
- * Per-statId display overrides applied during the catalog pass. Use these to
- * fix a broken label, scale the value, or append a unit suffix (e.g. sec/meters).
- * label:          replaces the rendered label.
- * valueMultiplier: multiplies the numeric value before display (e.g. a stat
- *                  stored as a flat count shown as a scaling percentage).
- * valueSuffix:    appended after the numeric value (e.g. "s" -> "+2s", "%").
- */
 const CATALOG_DISPLAY_OVERRIDES: Readonly<Record<string, { label?: string; valueMultiplier?: number; valueSuffix?: string }>> = {
   "s-increased-delay-timer-when-setting-off-land-mines": {
     label: "Increased delay timer when setting off Land Mines",
     valueSuffix: "s",
   },
-  // Both safe-fall source stats render with a meters suffix; they also merge
-  // into one line via STAT_MERGES below.
   "m-distance-increased-for-safe-fall": { valueSuffix: "m" },
   "m-increased-safe-fall-distance": { valueSuffix: "m" },
   "to-all-attributes-for-nearby-allies-and-party-members": {
@@ -39,7 +29,6 @@ const CATALOG_DISPLAY_OVERRIDES: Readonly<Record<string, { label?: string; value
   },
   "to-maximum-food-and-thirst-limit": { label: "Maximum food and thirst limit" },
   "to-maximum-food-water": { label: "Maximum food/water" },
-  // Stored as a flat count (3 per node); display the 33%-per-node scaling.
   "successive-hits-with-clubs-cause-the-last-hit-to-deal-additional-33-physical-damage": {
     label: "3 Successive hits with clubs cause the last hit to deal additional physical damage",
     valueMultiplier: 11,
@@ -48,7 +37,6 @@ const CATALOG_DISPLAY_OVERRIDES: Readonly<Record<string, { label?: string; value
   "to-sniper-rifle-target-penetration": { label: "Sniper Rifle Target Penetration" },
   "to-polearm-target-armor-reduction": { label: "Polearm Target Armor Reduction" },
   "to-ranged-weapon-target-armor-reduction": { label: "Ranged Weapon Target Armor Reduction" },
-  // Stored as a flat count (3 per node); display the 33%-per-node scaling.
   "successive-hits-with-pistols-in-a-short-time-cause-the-last-shot-to-deal-additional-33-physical-damage": {
     label: "3 successive hits with pistols in a short time causes the last shot to deal additional Physical Damage",
     valueMultiplier: 11,
@@ -64,48 +52,22 @@ const CATALOG_DISPLAY_OVERRIDES: Readonly<Record<string, { label?: string; value
   "to-maximum-number-of-allowed-active-portable-turrets": {
     label: "Additional number of allowed active Portable Turrets",
   },
-  // Both shotgun-stun stats show seconds; they also merge into one line via
-  // STAT_MERGES below (the merge supplies the shared label).
   "attacks-with-shotgun-stun-enemies-for-additional-s-seconds": { valueSuffix: "s" },
   "attacks-with-shotgun-stun-enemies-for-s-seconds": { valueSuffix: "s" },
 };
 
-/**
- * Splits a combined source stat's value into one or more existing target stats.
- * Each listed target receives the FULL source value added on (these bonuses are
- * "X% to each thing"). This runs on the numeric totals before display.
- *
- * removeSource: true  -> the combined source row is dropped entirely.
- * removeSource: false -> the combined source row is kept (e.g. relabeled via
- *                        CATALOG_DISPLAY_OVERRIDES) with its own value intact.
- */
 const STAT_SPLITS: Readonly<Record<string, { addTo: readonly string[]; removeSource: boolean }>> = {
-  // "10% decreased action noise level AND Alerted Target search duration":
-  // add 10% to each of the two individual stats, then remove the combined line.
   "decreased-action-noise-level-and-alerted-target-search-duration": {
     addTo: ["decreased-action-noise-level", "decreased-alerted-target-search-duration"],
     removeSource: true,
   },
-  // "10% increased Crouch Speed AND Stealth effectiveness in low light":
-  // pool the stealth-effectiveness portion into the existing stealth stat, then
-  // keep this row as the crouch-speed-only bonus (relabeled above).
   "increased-crouch-speed-and-stealth-effectiveness-in-low-light": {
     addTo: ["increased-stealth-effectiveness-in-low-light"],
     removeSource: false,
   },
 };
 
-/**
- * Merges distinct source statIds that should be pooled into a single Build
- * Totals line. Unlike the automatic label-pooling (which only merges rows that
- * already share a label), this rewrites the statId AND label of each listed
- * source stat to a canonical target, so different-labeled stats combine.
- *
- * Applied inside the catalog display pass, so pooling respects each entry's
- * category. Add one line per source statId that should fold into a target.
- */
 const STAT_MERGES: Readonly<Record<string, { targetStatId: string; label: string }>> = {
-  // Pool the flat node bonus and the derived attribute bonus into one line.
   "increased-action-skill-experience-gain": {
     targetStatId: "increased-action-skill-experience-gain",
     label: "Increased Action Skill Experience Gain",
@@ -114,7 +76,6 @@ const STAT_MERGES: Readonly<Record<string, { targetStatId: string; label: string
     targetStatId: "increased-action-skill-experience-gain",
     label: "Increased Action Skill Experience Gain",
   },
-  // Pool the two safe-fall distance stats into one "Distance increased for safe fall".
   "m-distance-increased-for-safe-fall": {
     targetStatId: "m-distance-increased-for-safe-fall",
     label: "Distance increased for safe fall",
@@ -123,14 +84,10 @@ const STAT_MERGES: Readonly<Record<string, { targetStatId: string; label: string
     targetStatId: "m-distance-increased-for-safe-fall",
     label: "Distance increased for safe fall",
   },
-  // Pool "to Trader Stage" into "trader level".
   "to-trader-stage": { targetStatId: "trader-level", label: "Trader level" },
   "trader-level": { targetStatId: "trader-level", label: "Trader level" },
-  // Pool the node "increased Dismemberment Chance" into the derived attribute
-  // "Dismemberment Chance".
   "increased-dismemberment-chance": { targetStatId: "dismemberment-chance", label: "Dismemberment Chance" },
   "dismemberment-chance": { targetStatId: "dismemberment-chance", label: "Dismemberment Chance" },
-  // Melee Weapons: pool attack-speed, physical-damage, and stamina-use variants.
   "increased-melee-attack-speed": { targetStatId: "increased-melee-attack-speed", label: "Increased Melee Attack Speed" },
   "increased-melee-weapon-attack-speed": { targetStatId: "increased-melee-attack-speed", label: "Increased Melee Attack Speed" },
   "increased-melee-physical-damage": { targetStatId: "increased-melee-physical-damage", label: "Increased Melee Physical Damage" },
@@ -138,13 +95,10 @@ const STAT_MERGES: Readonly<Record<string, { targetStatId: string; label: string
   "melee-physical-damage": { targetStatId: "increased-melee-physical-damage", label: "Increased Melee Physical Damage" },
   "less-stamina-used-by-melee-attacks": { targetStatId: "less-stamina-used-by-melee-attacks", label: "Less Stamina Used by Melee Attacks" },
   "decreased-stamina-consumption-while-using-melee-weapons": { targetStatId: "less-stamina-used-by-melee-attacks", label: "Less Stamina Used by Melee Attacks" },
-  // Ranged Weapons: pool hip-fire accuracy and ranged physical damage variants.
   "increased-hip-fire-accuracy": { targetStatId: "increased-hip-fire-accuracy", label: "Increased Hip Fire Accuracy" },
   "increased-ranged-weapon-hip-fire-accuracy": { targetStatId: "increased-hip-fire-accuracy", label: "Increased Hip Fire Accuracy" },
   "increased-ranged-physical-damage": { targetStatId: "increased-ranged-physical-damage", label: "Increased Ranged Physical Damage" },
   "ranged-physical-damage": { targetStatId: "increased-ranged-physical-damage", label: "Increased Ranged Physical Damage" },
-  // Shotguns: pool both shotgun-stun-duration stats into one line. The "s"
-  // seconds suffix is supplied by CATALOG_DISPLAY_OVERRIDES on both sources.
   "attacks-with-shotgun-stun-enemies-for-additional-s-seconds": {
     targetStatId: "attacks-with-shotgun-stun-enemies-for-additional-s-seconds",
     label: "Attacks with shotguns stun enemies for an additional",
@@ -155,22 +109,7 @@ const STAT_MERGES: Readonly<Record<string, { targetStatId: string; label: string
   },
 };
 
-/**
- * Category-scoped stat merges. Same idea as STAT_MERGES, but only applies within
- * one category. Use this when a shared alias stat (present in multiple
- * categories) should pool in ONE category without affecting its other aliases.
- *
- * Optional `targetCategory` moves the row into a DIFFERENT category (e.g. folding
- * an Assault Rifle bonus into the Machine Guns damage line). When a source
- * category loses all of its rows this way, that category section disappears.
- *
- * Keyed by source category name, then by source statId.
- */
 const CATEGORY_STAT_MERGES: Readonly<Record<string, Record<string, { targetStatId: string; label: string; targetCategory?: string }>>> = {
-  // The shared "Spears/Bows/Crossbows/Sniper Rifles" alias appears in three
-  // categories under different labels. Fold each into that category's native
-  // physical-damage line so the "with <weapon>" alias pools with the native
-  // damage stat (e.g. +5% alias + native = one summed line).
   Spears: {
     "increased-physical-damage-with-spears-bows-crossbows-and-sniper-rifles": {
       targetStatId: "increased-polearm-physical-damage",
@@ -189,9 +128,6 @@ const CATEGORY_STAT_MERGES: Readonly<Record<string, Record<string, { targetStatI
       label: "Increased Bow and Crossbow Physical Damage",
     },
   },
-  // The Assault Rifles category was a mistake. Fold its damage bonus into the
-  // Machine Guns damage line. This empties Assault Rifles, hiding the category.
-  // The same alias's Explosives portion is untouched.
   "Assault Rifles": {
     "increased-assault-rifle-rocket-launcher-and-explosive-physical-damage": {
       targetStatId: "increased-machine-gun-physical-damage",
@@ -199,8 +135,6 @@ const CATEGORY_STAT_MERGES: Readonly<Record<string, Record<string, { targetStatI
       targetCategory: "Machine Guns",
     },
   },
-  // Pool the "Blade Weapons, Pistols and Submachine Guns" combined damage bonus
-  // into the Pistols damage line (this alias only lives under Pistols).
   Pistols: {
     "increased-physical-damage-with-blade-weapons-pistols-and-submachine-guns": {
       targetStatId: "increased-pistol-physical-damage",
@@ -209,12 +143,6 @@ const CATEGORY_STAT_MERGES: Readonly<Record<string, Record<string, { targetStatI
   },
 };
 
-/**
- * Special display overrides for stats whose source data does not translate
- * cleanly into a single numeric value. These are NOT in the catalog; they are
- * caught in the uncatalogued fallback and given a category, a cleaned label,
- * and a text value (e.g. a "100-200" range instead of a broken +100).
- */
 const SPECIAL_DISPLAY: Readonly<Record<string, { category: string; label: string; valueText: string }>> = {
   "you-can-additionally-find-200-duke-s-casino-tokens-in-buried-treasures": {
     category: "Looting",
@@ -228,15 +156,6 @@ const SPECIAL_DISPLAY: Readonly<Record<string, { category: string; label: string
   },
 };
 
-/**
- * Display-only node bonuses (includeInTotals === false) that we still want to
- * surface in Build Totals as a text-only line with no value. They are excluded
- * from the numeric total calculation, so they are detected separately by
- * scanning purchased nodes for a matching effect.
- *
- * `syntheticStatId` is used only for keying/ordering in Build Totals.
- * `match` tests an effect's displayText/label to find the owning node.
- */
 const DISPLAY_ONLY_BONUSES: readonly {
   syntheticStatId: string;
   category: string;
@@ -257,17 +176,6 @@ const DISPLAY_ONLY_BONUSES: readonly {
   },
 ];
 
-/**
- * Custom bonus ordering per category.
- *
- * HOW TO ADD A CATEGORY ORDER:
- *   Add one entry keyed by the exact category name, whose value is the ordered
- *   list of statIds for that category. Ordering is applied at render time, after
- *   the totals are filtered down to that single category (see CategorySection).
- *
- * Categories without an entry here fall back to alphabetical order for now.
- * Category and subcategory NAMES always stay alphabetized via BUILD_TOTAL_HIERARCHY.
- */
 const CATEGORY_BONUS_ORDER: Readonly<Record<string, readonly string[]>> = {
   Defense: [
     "increased-maximum-health",
@@ -410,29 +318,8 @@ const CATEGORY_BONUS_ORDER: Readonly<Record<string, readonly string[]>> = {
     "improved-shotgun-fire-rate-and-reload-speed",
     "attacks-with-shotgun-stun-enemies-for-additional-s-seconds",
   ],
-  Explosives: [
-    "increased-rocket-launcher-and-explosive-physical-damage",
-    "improved-rocket-launcher-reload-speed",
-    "improved-rocket-launcher-and-explosive-handling-and-dismemberment-chance",
-  ],
-  "Machine Guns": [
-    "increased-machine-gun-physical-damage",
-    "improved-machine-gun-handling-aim-and-reload-speed",
-    "recover-stamina-on-each-successful-shot-using-machine-guns",
-  ],
-  Pistols: [
-    "increased-pistol-physical-damage",
-	"improved-pistol-fire-rate-and-reload-speed",
-	"3-successive-hits-with-pistols-in-a-short-time-cause-the-last-shot-to-deal-additional-physical-damage",
-  ],
 };
 
-/**
- * Applies configured stat splits to the numeric totals: distributes a combined
- * stat's value into individual target stats, optionally removing the combined
- * source. Targets are matched/created by statId; label/unit for created targets
- * do not matter for catalog stats since the display pass uses the catalog label.
- */
 function applyStatSplits(totals: Total[]): Total[] {
   const byId = new Map(totals.map((total) => [total.statId, { ...total }]));
   for (const [sourceId, config] of Object.entries(STAT_SPLITS)) {
@@ -451,12 +338,6 @@ function applyStatSplits(totals: Total[]): Total[] {
   return [...byId.values()];
 }
 
-/**
- * Sorts a single category's totals. Applied only after totals are filtered to
- * one category, which keeps the comparator consistent and the order reliable.
- * Unlisted stats fall to the end, then alphabetical. Categories without a
- * custom order stay alphabetical.
- */
 function sortCategoryTotals(category: string, totals: DisplayTotal[]): DisplayTotal[] {
   const order = CATEGORY_BONUS_ORDER[category];
   if (!order) {
@@ -512,11 +393,6 @@ export function calculateBuildTotals(build: PlannerBuild, skills: SkillNode[]): 
   return [...byStat.values()].filter((total) => total.value !== 0);
 }
 
-/**
- * Detects purchased display-only node bonuses that should still appear as a
- * text-only Build Totals line with no value. These are excluded from numeric
- * totals, so we scan purchased nodes directly for a matching effect.
- */
 function collectDisplayOnlyBonuses(build: PlannerBuild, skills: SkillNode[]): DisplayTotal[] {
   const results: DisplayTotal[] = [];
   const alreadyAdded = new Set<string>();
@@ -542,13 +418,6 @@ function collectDisplayOnlyBonuses(build: PlannerBuild, skills: SkillNode[]): Di
   return results;
 }
 
-/**
- * Number of distinct categories each statId appears in across the catalog.
- * A statId used in only one category is a "native" stat. A statId used in
- * multiple categories is a presentation alias (e.g. the shared Submachine Gun /
- * Baton / Salvage Tool damage source). Used to prefer the native statId when
- * merging so per-category custom ordering keeps working.
- */
 const STAT_ID_CATEGORY_COUNT = (() => {
   const counts = new Map<string, number>();
   for (const entry of BUILD_TOTAL_CATALOG) {
@@ -561,11 +430,6 @@ function createDisplayTotals(totals: Total[], displayOnlyBonuses: DisplayTotal[]
   const byStat = new Map(totals.map((total) => [total.statId, total]));
   const catalogStatIds = new Set(BUILD_TOTAL_CATALOG.map((entry) => entry.statId));
 
-  // First pass: one row per (category, statId). This prevents a pooled stat
-  // that is listed multiple times in a category (e.g. Maximum Health in Defense)
-  // from being counted more than once. Configured stat merges rewrite the
-  // statId and label here so different-labeled stats can pool together.
-  // Per-statId display overrides (label / value suffix) are also applied here.
   const perStat: DisplayTotal[] = [];
   const seenStatKeys = new Set<string>();
   for (const entry of BUILD_TOTAL_CATALOG) {
@@ -586,9 +450,6 @@ function createDisplayTotals(totals: Total[], displayOnlyBonuses: DisplayTotal[]
     });
   }
 
-  // Second pass: pool rows that share the same category + rendered label. This
-  // merges a native stat with any presentation alias (or configured stat merge)
-  // that displays the same label in that category, summing values into one line.
   const byCategoryLabel = new Map<string, DisplayTotal>();
   for (const item of perStat) {
     const labelKey = `${item.category}::${item.label.toLocaleLowerCase()}`;
@@ -599,11 +460,9 @@ function createDisplayTotals(totals: Total[], displayOnlyBonuses: DisplayTotal[]
     }
     if (existing.unit !== item.unit) continue;
     existing.value += item.value;
-    // Preserve a value suffix if the first row lacked one.
     if (existing.valueSuffix === undefined && item.valueSuffix !== undefined) {
       existing.valueSuffix = item.valueSuffix;
     }
-    // Prefer a native statId so per-category ordering configs still match.
     const existingIsAlias = (STAT_ID_CATEGORY_COUNT.get(existing.statId) ?? 1) > 1;
     const itemIsNative = (STAT_ID_CATEGORY_COUNT.get(item.statId) ?? 1) === 1;
     if (existingIsAlias && itemIsNative) existing.statId = item.statId;
@@ -611,18 +470,13 @@ function createDisplayTotals(totals: Total[], displayOnlyBonuses: DisplayTotal[]
 
   const displayed = [...byCategoryLabel.values()];
 
-  // Text-only display-only bonuses from purchased nodes.
   displayed.push(...displayOnlyBonuses);
 
-  // Uncatalogued stats: apply a stat merge if configured, otherwise a special
-  // display override, otherwise fall back to the Miscellaneous bucket.
   for (const total of totals) {
     if (catalogStatIds.has(total.statId)) continue;
 
     const merge = STAT_MERGES[total.statId];
     if (merge) {
-      // Fold into an existing merged row if present in any category, else drop
-      // it into Miscellaneous as the canonical label.
       const target = displayed.find(
         (row) => row.statId === merge.targetStatId && row.unit === total.unit,
       );

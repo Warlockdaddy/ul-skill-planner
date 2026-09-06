@@ -1,24 +1,8 @@
 import type { SkillEffect, SkillNode } from "../domain/types";
 
-/**
- * Icon assignment by shared bonuses.
- *
- * The universal rule: every node that displays the exact same set of bonus
- * lines shares the same icon. We deliberately match on the VISIBLE bonus text
- * (what the tooltip shows), never on statId.
- *
- * Why not statId: the same visible bonus is stored under inconsistent statIds
- * in the tree data (for example "physical-damage-resistance" vs
- * "increased-physical-damage-resistance" both render
- * "4% increased Physical Damage Resistance"). Matching on the rendered text
- * groups those nodes correctly regardless of the underlying statId.
- */
 
-/**
- * Formats one effect into the exact line the tooltip shows.
- * Mirrors SkillTooltip.formatEffect so signatures line up with what the
- * player reads on the node.
- */
+
+
 function formatBonusLine(effect: SkillEffect): string {
   if (effect.displayText) return effect.displayText;
   const sign = effect.valuePerRank > 0 ? "+" : "";
@@ -26,11 +10,7 @@ function formatBonusLine(effect: SkillEffect): string {
   return `${sign}${effect.valuePerRank}${suffix} ${effect.label}`;
 }
 
-/**
- * Builds a stable signature from a set of bonus lines.
- * Normalizes whitespace and case, and sorts so line order never matters.
- * Two nodes share a signature exactly when they show the same bonus set.
- */
+
 function signatureFromLines(lines: string[]): string {
   return lines
     .map((line) => line.trim().replace(/\s+/g, " ").toLocaleLowerCase())
@@ -38,41 +18,27 @@ function signatureFromLines(lines: string[]): string {
     .join(" || ");
 }
 
-/** Canonical bonus signature for a node, derived from its rendered lines. */
+
 export function getBonusSignature(node: Pick<SkillNode, "effects">): string {
   return signatureFromLines(node.effects.map(formatBonusLine));
 }
 
-/**
- * One icon mapped to the exact bonus lines that identify it.
- *
- * `bonuses` must contain the exact rendered lines (copy them straight from a
- * node's tooltip). Order does not matter. Every node whose complete bonus set
- * matches these lines will use `icon`.
- */
+
 interface IconAssignment {
   icon: string;
   bonuses: string[];
 }
 
-/**
- * The icon registry. Add one entry per distinct bonus set.
- *
- * Each PNG must follow the shared icon spec (48x48, pure white, binary alpha,
- * ~40px footprint) and live in public/icons/skills/.
- *
- * Note: a single icon may be reused for multiple distinct bonus sets — just
- * add a separate entry per bonus set that points at the same PNG.
- */
+
 const iconAssignments: IconAssignment[] = [
-  /* -------- Attribute nodes (unified into the same system) -------- */
+
   { icon: "/icons/skills/strength-bicep.png", bonuses: ["+5 to Strength"] },
   { icon: "/icons/skills/fortitude-heart.png", bonuses: ["+5 to Fortitude"] },
   { icon: "/icons/skills/dexterity-hand.png", bonuses: ["+5 to Dexterity"] },
   { icon: "/icons/skills/perception-eye.png", bonuses: ["+5 to Perception"] },
   { icon: "/icons/skills/intellect-brain.png", bonuses: ["+5 to Intellect"] },
 
-  /* -------- Bonus-based nodes -------- */
+
   {
     icon: "/icons/skills/resist-damage-shell.png",
     bonuses: [
@@ -94,14 +60,14 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same stomach icon reused for the Consumable-duration node.
+
     icon: "/icons/skills/metabolism-stomach.png",
     bonuses: [
       "20% increased duration of Consumable effects",
     ],
   },
   {
-    // Same stomach icon reused for the Food/Water + diving + dysentery node.
+
     icon: "/icons/skills/metabolism-stomach.png",
     bonuses: [
       "+10 to Maximum Food/Water",
@@ -116,7 +82,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same plus icon reused for the larger Maximum Health node.
+
     icon: "/icons/skills/health-plus.png",
     bonuses: [
       "+10 to Maximum Health",
@@ -130,7 +96,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same brass knuckles icon reused for the upgraded Fist Weapon node.
+
     icon: "/icons/skills/fist-brass-knuckles.png",
     bonuses: [
       "5% increased Fist Weapon Physical Damage",
@@ -139,7 +105,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same brass knuckles icon reused for the Fist Weapon stun/knockdown node.
+
     icon: "/icons/skills/fist-brass-knuckles.png",
     bonuses: [
       "8% increased chance to Stun Targets using Fist Weapons",
@@ -155,14 +121,14 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same stomach icon reused for the Maximum Food/Water node.
+
     icon: "/icons/skills/metabolism-stomach.png",
     bonuses: [
       "+20 to Maximum Food/Water",
     ],
   },
   {
-    // Same stomach icon reused for the 10% food/water-loss node.
+
     icon: "/icons/skills/metabolism-stomach.png",
     bonuses: [
       "10% decreased speed of food and water loss",
@@ -182,28 +148,28 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same shotgun icon reused for the fire-rate/reload node.
+
     icon: "/icons/skills/shotgun.png",
     bonuses: [
       "5% improved Shotgun Fire Rate and Reload Speed",
     ],
   },
   {
-    // Same shotgun icon reused for the stun node.
+
     icon: "/icons/skills/shotgun.png",
     bonuses: [
       "Attacks with Shotgun stun enemies for 4s seconds",
     ],
   },
   {
-    // Same shotgun icon reused for the +2s stun-extension node.
+
     icon: "/icons/skills/shotgun.png",
     bonuses: [
       "Attacks with Shotgun stun enemies for additional 2s seconds",
     ],
   },
   {
-    // Same shotgun icon reused for the +2s stun-extension + leg-cripple node.
+
     icon: "/icons/skills/shotgun.png",
     bonuses: [
       "Attacks with Shotgun stun enemies for additional 2s seconds.",
@@ -246,7 +212,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same boot-and-trap icon reused for the upgraded Land Mine node.
+
     icon: "/icons/skills/land-mine-boot-trap.png",
     bonuses: [
       "1s increased delay timer when setting off Land Mines",
@@ -262,7 +228,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same poised-dagger icon reused for the 50% Sneak Attack node.
+
     icon: "/icons/skills/sneak-attack-dagger.png",
     bonuses: [
       "50% increased Sneak Attack Physical Damage",
@@ -276,7 +242,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same bow-and-arrow icon reused for the physical-damage node.
+
     icon: "/icons/skills/bow-and-arrow.png",
     bonuses: [
       "5% increased Bow and Crossbow Physical Damage",
@@ -296,7 +262,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same tied loot-sack icon reused for the percentage Loot Stage node.
+
     icon: "/icons/skills/loot-sack.png",
     bonuses: [
       "15% increased Loot Stage",
@@ -304,7 +270,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same tied loot-sack icon reused for the percentage Loot Stage node.
+
     icon: "/icons/skills/loot-sack.png",
     bonuses: [
       "10% increased Loot Stage",
@@ -331,7 +297,7 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same meat-and-knife icon reused for the larger animal-harvest node.
+
     icon: "/icons/skills/meat-and-knife.png",
     bonuses: [
       "15% increased amount of resources gathered from animals with Bladed Tools",
@@ -363,14 +329,14 @@ const iconAssignments: IconAssignment[] = [
     ],
   },
   {
-    // Same bear-paw icon reused for medium-game tracking.
+
     icon: "/icons/skills/bear-paw-print.png",
     bonuses: [
       "Track medium game like deer, boars, wolves and coyotes",
     ],
   },
   {
-    // Same bear-paw icon reused for big-game tracking.
+
     icon: "/icons/skills/bear-paw-print.png",
     bonuses: [
       "Track big game like mountain lions and bears",
@@ -840,7 +806,7 @@ const iconAssignments: IconAssignment[] = [
   },
 ];
 
-/** Precomputed signature -> icon lookup, built once at module load. */
+
 const iconBySignature: Map<string, string> = (() => {
   const map = new Map<string, string>();
   for (const assignment of iconAssignments) {
@@ -857,10 +823,7 @@ const iconBySignature: Map<string, string> = (() => {
   return map;
 })();
 
-/**
- * Returns the icon path for a node whose bonus set has a registered icon,
- * or undefined to fall back to the default SVG symbol.
- */
+
 export function getNodeIconSrc(node: Pick<SkillNode, "effects">): string | undefined {
   const iconPath = iconBySignature.get(getBonusSignature(node));
   if (!iconPath) return undefined;

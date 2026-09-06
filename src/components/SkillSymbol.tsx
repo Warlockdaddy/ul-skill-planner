@@ -5,11 +5,7 @@ interface SkillSymbolProps {
   size?: number;
 }
 
-/**
- * Draws an original SVG symbol for a skill node.
- * Symbols use a 48 x 48 coordinate system and inherit
- * their color from the surrounding node or context hub.
- */
+
 export function SkillSymbol({
   icon,
   size = 30,

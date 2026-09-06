@@ -4,7 +4,6 @@ export type BuildTotalCatalogEntry = {
   label: string;
 };
 
-/** Generated from finalcategories.csv. */
 export const BUILD_TOTAL_CATALOG: readonly BuildTotalCatalogEntry[] = [
   { statId: "increased-assault-rifle-rocket-launcher-and-explosive-physical-damage", category: "Assault Rifles", label: "increased Assault Rifle Physical Damage" },
   { statId: "increased-baton-physical-damage", category: "Batons", label: "increased Baton Physical Damage" },

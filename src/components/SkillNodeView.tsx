@@ -18,17 +18,6 @@ interface SkillNodeViewProps {
   onHoverEnd: () => void;
 }
 
-/**
- * Debug switch: when the page URL contains ?nodeids (or ?nodeids=1), every
- * skill node renders its exact id beneath it so nodes can be identified
- * precisely (mirrors the ?hubids overlay for context hubs). This is the
- * surefire way to tell which node has, for example, a wrong bonus in the data.
- *
- * Examples that enable it:
- *   http://localhost:5173/?nodeids
- *   http://localhost:5173/?nodeids=1
- * It can be combined with the hub overlay: ?hubids&nodeids
- */
 const NODE_ID_DEBUG: boolean =
   typeof window !== "undefined" &&
   new URLSearchParams(window.location.search).has("nodeids");
@@ -59,19 +48,10 @@ function SkillNodeViewComponent({
       ? skill.effects[0]
       : null;
   const pureAttributeId = pureAttributeEffect?.statId ?? null;
-  /**
-   * These three Strength nodes share their visible bonus wording with the
-   * Submachine Gun branch, but represent the separate Machine Gun branch.
-   * Give only these nodes their dedicated AK-47 artwork.
-   */
   const machineGunIconOverride =
     skill.id === "strength-module-3-left-1" ||
     skill.id === "strength-module-3-left-2" ||
     skill.id === "strength-module-3-left-3";
-  /**
-   * Custom white-silhouette artwork is normally resolved from shared bonuses.
-   * The targeted Machine Gun nodes use their dedicated AK-47 PNG instead.
-   */
   const nodeIconSrc = machineGunIconOverride
     ? "/icons/skills/ak47.png"
     : !isRoot
