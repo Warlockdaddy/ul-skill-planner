@@ -133,7 +133,10 @@ const HUB_ID_DEBUG: boolean =
 function SkillContextHubViewComponent({
   hub,
 }: SkillContextHubViewProps) {
-  const hubImageSrc = HUB_IMAGE_SRC[hub.id];
+  const rawHubImageSrc = HUB_IMAGE_SRC[hub.id];
+  const hubImageSrc = rawHubImageSrc
+    ? `${import.meta.env.BASE_URL}${rawHubImageSrc.replace(/^\/+/, "")}`
+    : undefined;
   /* Larger footprint than the SVG symbol so the artwork fills the hub. */
   const imageSize = 54;
   const imageBox = 60;

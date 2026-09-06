@@ -73,7 +73,7 @@ function SkillNodeViewComponent({
    * The targeted Machine Gun nodes use their dedicated AK-47 PNG instead.
    */
   const nodeIconSrc = machineGunIconOverride
-    ? "/icons/skills/ak47.png"
+    ? `${import.meta.env.BASE_URL}icons/skills/ak47.png`
     : !isRoot
       ? getNodeIconSrc(skill)
       : undefined;

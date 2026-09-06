@@ -862,5 +862,7 @@ const iconBySignature: Map<string, string> = (() => {
  * or undefined to fall back to the default SVG symbol.
  */
 export function getNodeIconSrc(node: Pick<SkillNode, "effects">): string | undefined {
-  return iconBySignature.get(getBonusSignature(node));
+  const iconPath = iconBySignature.get(getBonusSignature(node));
+  if (!iconPath) return undefined;
+  return `${import.meta.env.BASE_URL}${iconPath.replace(/^\/+/, "")}`;
 }

@@ -21,7 +21,10 @@ export function SkillSymbol({
     "class-specialist": "/icons/classes/class-specialist.png",
     "class-assault": "/icons/classes/class-assault.png",
   };
-  const classIconPath = classIconPaths[icon];
+  const rawClassIconPath = classIconPaths[icon];
+  const classIconPath = rawClassIconPath
+    ? `${import.meta.env.BASE_URL}${rawClassIconPath.replace(/^\/+/, "")}`
+    : undefined;
 
   if (classIconPath) {
     return (
