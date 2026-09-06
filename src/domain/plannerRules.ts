@@ -61,7 +61,7 @@ export function hasPurchasedDependent(skillId: string, build: PlannerBuild, skil
   return neighbors(skillId, skills).some((id) => isSkillPurchased(build, id));
 }
 function isOtherRoot(skill: SkillNode, selectedClassId: PlannerBuild["selectedClassId"]): boolean {
-  return skill.cost === 0 && skill.prerequisites.length === 0 &&
+  return skill.id.endsWith("-root") && skill.prerequisites.length === 0 &&
     skill.id !== `${selectedClassId}-root`;
 }
 export function getCompleteRequiredPath(
@@ -120,7 +120,7 @@ export function purchaseCompletePath(destination: SkillNode, build: PlannerBuild
   return { ...build, purchasedRanks };
 }
 export function canRemoveSkillRank(skill: SkillNode, build: PlannerBuild, skills: SkillNode[]): boolean {
-  if (skill.cost === 0 || !isSkillPurchased(build, skill.id) || !build.selectedClassId) return false;
+  if (skill.id.endsWith("-root") || !isSkillPurchased(build, skill.id) || !build.selectedClassId) return false;
   const rootId = `${build.selectedClassId}-root`;
   const reached = new Set([rootId]);
   const queue = [rootId];

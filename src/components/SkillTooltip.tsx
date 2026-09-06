@@ -53,7 +53,7 @@ export function SkillTooltip({
 }: SkillTooltipProps) {
   const isPurchased = rank > 0;
   const isClassNode =
-    skill.cost === 0 && skill.prerequisites.length === 0;
+    skill.id.endsWith("-root") && skill.prerequisites.length === 0;
   const classBonusLines = isClassNode ? getClassBonusLines(skill) : [];
   const ordinaryEffectLines = skill.effects.map(formatEffect);
   const displayedLines = isClassNode ? classBonusLines : ordinaryEffectLines;
@@ -140,7 +140,7 @@ export function SkillTooltip({
             {isClassNode
               ? isPurchased
                 ? "Allocated"
-                : "1 point"
+                : `${skill.cost} ${skill.cost === 1 ? "point" : "points"}`
               : isPurchased
                 ? "Allocated"
                 : `${pathCost} ${pathCost === 1 ? "point" : "points"}`}

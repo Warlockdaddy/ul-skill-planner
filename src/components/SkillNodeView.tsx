@@ -47,7 +47,7 @@ function SkillNodeViewComponent({
   onHoverEnd,
 }: SkillNodeViewProps) {
   const isPurchased = rank > 0;
-  const isRoot = skill.cost === 0 && skill.prerequisites.length === 0;
+  const isRoot = skill.id.endsWith("-root") && skill.prerequisites.length === 0;
   const pureAttributeEffect =
     !isRoot &&
     skill.effects.length === 1 &&
@@ -73,7 +73,7 @@ function SkillNodeViewComponent({
    * The targeted Machine Gun nodes use their dedicated AK-47 PNG instead.
    */
   const nodeIconSrc = machineGunIconOverride
-    ? `${import.meta.env.BASE_URL}icons/skills/ak47.png`
+    ? "/icons/skills/ak47.png"
     : !isRoot
       ? getNodeIconSrc(skill)
       : undefined;

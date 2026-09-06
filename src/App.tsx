@@ -29,7 +29,7 @@ const initialBuild: PlannerBuild = {
 };
 
 function isClassRoot(skill: SkillNode): boolean {
-  return skill.cost === 0 && skill.prerequisites.length === 0;
+  return skill.id.endsWith("-root") && skill.prerequisites.length === 0;
 }
 
 function getClassRootId(classId: SkillCategoryId): string {
@@ -101,7 +101,7 @@ function App() {
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
 
   useEffect(() => {
-    if (buildFileMessage !== "Build loaded successfully.") return;
+    if (buildFileMessage === null) return;
 
     const timeoutId = window.setTimeout(() => {
       setBuildFileMessage(null);
@@ -144,6 +144,7 @@ function App() {
 
   function handleClassRootClick(skill: SkillNode) {
     if (build.selectedClassId === null) {
+      if (availableSkillPoints < skill.cost) return;
       setBuild((current) => ({
         ...current,
         selectedClassId: skill.categoryId,
