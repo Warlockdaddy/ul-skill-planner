@@ -2422,3 +2422,61 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* -------------------------------------------------- */
+/* Short touch-screen landscape overlays               */
+/* -------------------------------------------------- */
+@media (pointer: coarse) and (max-width: 1000px) and (max-height: 600px) {
+  .workspace.workspace--three-column {
+    position: relative;
+    display: block;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .tree-panel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .build-panel,
+  .help-panel {
+    position: absolute;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 12;
+    width: min(250px, calc(50% - 18px));
+    padding: 0 8px;
+    overflow: visible;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(23, 28, 32, 0.97);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.48);
+  }
+
+  .build-panel { left: max(8px, env(safe-area-inset-left)); }
+  .help-panel { right: max(8px, env(safe-area-inset-right)); }
+
+  .mobile-section-toggle {
+    min-height: 38px;
+    padding: 0 2px;
+    font-size: 0.78rem;
+  }
+
+  .mobile-panel--open { width: min(390px, calc(100% - 16px)); }
+  .mobile-panel--open .mobile-collapsible-content { max-height: min(48dvh, 260px); }
+
+  .build-panel.mobile-panel--open {
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+  }
+
+  .help-panel.mobile-panel--open {
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+  }
+
+  .tree-zoom-controls { bottom: 54px; }
+}
