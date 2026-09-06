@@ -45,7 +45,6 @@ const CATALOG_DISPLAY_OVERRIDES: Readonly<Record<string, { label?: string; value
     valueMultiplier: 11,
     valueSuffix: "%",
   },
-  "to-sniper-rifle-target-penetration": { label: "Sniper Rifle Target Penetration" },
   "to-polearm-target-armor-reduction": { label: "Polearm Target Armor Reduction" },
   "to-ranged-weapon-target-armor-reduction": { label: "Ranged Weapon Target Armor Reduction" },
   // Stored as a flat count (3 per node); display the 33%-per-node scaling.
@@ -167,26 +166,13 @@ const STAT_MERGES: Readonly<Record<string, { targetStatId: string; label: string
  * Keyed by source category name, then by source statId.
  */
 const CATEGORY_STAT_MERGES: Readonly<Record<string, Record<string, { targetStatId: string; label: string; targetCategory?: string }>>> = {
-  // The shared "Spears/Bows/Crossbows/Sniper Rifles" alias appears in three
-  // categories under different labels. Fold each into that category's native
-  // physical-damage line so the "with <weapon>" alias pools with the native
-  // damage stat (e.g. +5% alias + native = one summed line).
+  // The shared "Spears/Bows/Crossbows/Sniper Rifles" alias pools into Polearm
+  // damage ONLY inside Spears. Its Bow and Crossbow / Sniper Rifles aliases are
+  // left untouched.
   Spears: {
     "increased-physical-damage-with-spears-bows-crossbows-and-sniper-rifles": {
       targetStatId: "increased-polearm-physical-damage",
       label: "Increased Polearm Physical Damage",
-    },
-  },
-  "Sniper Rifles": {
-    "increased-physical-damage-with-spears-bows-crossbows-and-sniper-rifles": {
-      targetStatId: "increased-sniper-rifle-physical-damage",
-      label: "Increased Sniper Rifle Physical Damage",
-    },
-  },
-  "Bow and Crossbow": {
-    "increased-physical-damage-with-spears-bows-crossbows-and-sniper-rifles": {
-      targetStatId: "increased-bow-and-crossbow-physical-damage",
-      label: "Increased Bow and Crossbow Physical Damage",
     },
   },
   // The Assault Rifles category was a mistake. Fold its damage bonus into the
@@ -394,36 +380,10 @@ const CATEGORY_BONUS_ORDER: Readonly<Record<string, readonly string[]>> = {
     "increased-portable-turret-active-range-by-m",
     "to-maximum-number-of-allowed-active-portable-turrets",
   ],
-  "Bow and Crossbow": [
-    "increased-bow-and-crossbow-physical-damage",
-    "improved-bow-and-crossbow-aim-draw-and-reload-speed",
-  ],
-  "Sniper Rifles": [
-    "increased-sniper-rifle-physical-damage",
-    "improved-sniper-rifle-aim-and-reload-speed",
-    "successive-kills-can-trigger-up-to-more-kill-streak-bonus-damage",
-    "decreased-stamina-consumption-while-aiming-with-sniper-rifles",
-    "to-sniper-rifle-target-penetration",
-  ],
   Shotguns: [
     "increased-shotgun-physical-damage",
     "improved-shotgun-fire-rate-and-reload-speed",
     "attacks-with-shotgun-stun-enemies-for-additional-s-seconds",
-  ],
-  Explosives: [
-    "increased-rocket-launcher-and-explosive-physical-damage",
-    "improved-rocket-launcher-reload-speed",
-    "improved-rocket-launcher-and-explosive-handling-and-dismemberment-chance",
-  ],
-  "Machine Guns": [
-    "increased-machine-gun-physical-damage",
-    "improved-machine-gun-handling-aim-and-reload-speed",
-    "recover-stamina-on-each-successful-shot-using-machine-guns",
-  ],
-  Pistols: [
-    "increased-pistol-physical-damage",
-	"improved-pistol-fire-rate-and-reload-speed",
-	"3-successive-hits-with-pistols-in-a-short-time-cause-the-last-shot-to-deal-additional-physical-damage",
   ],
 };
 
