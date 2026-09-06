@@ -258,27 +258,6 @@ function App() {
     }
   }
 
-  // TEMPORARY TESTING HELPER: remove this function and its button before production.
-  function handleAllocateAllForTesting() {
-    const purchasedRanks = Object.fromEntries(
-      prototypeSkills.map((skill) => [skill.id, 1]),
-    );
-    const spentForAllNodes = prototypeSkills.reduce(
-      (total, skill) => total + skill.cost,
-      0,
-    );
-    const levelPoints = calculateTotalSkillPoints(300, 0);
-
-    setBuild({
-      characterLevel: 300,
-      bonusSkillPoints: Math.max(0, spentForAllNodes - levelPoints),
-      // This deliberately bypasses the one-class rule for Build Totals testing.
-      selectedClassId: null,
-      purchasedRanks,
-    });
-    setBuildFileMessage("Testing mode: every skill node allocated.");
-  }
-
   function handleActivateSkill(skillId: string) {
     const skill = findSkillById(prototypeSkills, skillId);
     if (!skill) return;
@@ -368,15 +347,6 @@ function App() {
               }}
             >
               Load Build
-            </button>
-            {/* TEMPORARY TESTING BUTTON: remove before production. */}
-            <button
-              type="button"
-              className="build-file-button"
-              onClick={handleAllocateAllForTesting}
-              title="Temporary testing tool. Remove before publishing."
-            >
-              Allocate All
             </button>
             <button
               type="button"
