@@ -54,6 +54,12 @@ interface DragState {
   startingPointer: Point;
   startingView: ViewTransform;
 }
+interface PinchState {
+  startingDistance: number;
+  startingCenter: Point;
+  startingView: ViewTransform;
+  worldCenter: Point;
+}
 
 interface MatchingBonus {
   label: string;
@@ -140,6 +146,10 @@ export function SkillTree({
     useRef<SVGSVGElement | null>(null);
   const dragStateRef =
     useRef<DragState | null>(null);
+  const activePointersRef =
+    useRef(new Map<number, Point>());
+  const pinchStateRef =
+    useRef<PinchState | null>(null);
   const isDraggingRef =
     useRef(false);
   const suppressNextClickRef =
@@ -152,6 +162,7 @@ export function SkillTree({
     useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedSearchSkillId, setFocusedSearchSkillId] = useState<string | null>(null);
+  const [mobileSearchResultsOpen, setMobileSearchResultsOpen] = useState(true);
   const [
     hoveredSkillId,
     setHoveredSkillId,
@@ -308,31 +319,52 @@ export function SkillTree({
     };
   }, []);
 
+  function beginPinch() {
+    const points = [...activePointersRef.current.values()];
+    if (points.length < 2) return;
+    const first = points[0];
+    const second = points[1];
+    const center = {
+      x: (first.x + second.x) / 2,
+      y: (first.y + second.y) / 2,
+    };
+    pinchStateRef.current = {
+      startingDistance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+      startingCenter: center,
+      startingView: { ...view },
+      worldCenter: {
+        x: (center.x - view.x) / view.scale,
+        y: (center.y - view.y) / view.scale,
+      },
+    };
+    dragStateRef.current = null;
+    isDraggingRef.current = true;
+    suppressNextClickRef.current = true;
+    setIsDragging(true);
+    setHoveredSkillId(null);
+  }
+
   function handlePointerDown(
     event: ReactPointerEvent<SVGSVGElement>,
   ) {
-    if (event.button !== 0) {
-      return;
-    }
+    if (event.pointerType === "mouse" && event.button !== 0) return;
     const svg = svgRef.current;
-    if (!svg) {
+    if (!svg) return;
+    const point = clientPointToSvg(svg, event.clientX, event.clientY);
+    if (!point) return;
+
+    activePointersRef.current.set(event.pointerId, point);
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    if (activePointersRef.current.size >= 2) {
+      beginPinch();
       return;
     }
-    const startingPointer =
-      clientPointToSvg(
-        svg,
-        event.clientX,
-        event.clientY,
-      );
-    if (!startingPointer) {
-      return;
-    }
+
     dragStateRef.current = {
       pointerId: event.pointerId,
-      startingPointer,
-      startingView: {
-        ...view,
-      },
+      startingPointer: point,
+      startingView: { ...view },
     };
     isDraggingRef.current = false;
     suppressNextClickRef.current = false;
@@ -342,97 +374,91 @@ export function SkillTree({
     event: ReactPointerEvent<SVGSVGElement>,
   ) {
     const svg = svgRef.current;
-    const dragState =
-      dragStateRef.current;
-    if (
-      !svg ||
-      !dragState ||
-      dragState.pointerId !==
-        event.pointerId
-    ) {
-      return;
-    }
-    const currentPointer =
-      clientPointToSvg(
-        svg,
-        event.clientX,
-        event.clientY,
+    if (!svg || !activePointersRef.current.has(event.pointerId)) return;
+    const point = clientPointToSvg(svg, event.clientX, event.clientY);
+    if (!point) return;
+    activePointersRef.current.set(event.pointerId, point);
+
+    if (activePointersRef.current.size >= 2) {
+      if (!pinchStateRef.current) beginPinch();
+      const pinch = pinchStateRef.current;
+      const points = [...activePointersRef.current.values()];
+      if (!pinch || points.length < 2) return;
+      event.preventDefault();
+      const first = points[0];
+      const second = points[1];
+      const center = {
+        x: (first.x + second.x) / 2,
+        y: (first.y + second.y) / 2,
+      };
+      const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+      const nextScale = clamp(
+        pinch.startingView.scale * (distance / pinch.startingDistance),
+        MINIMUM_ZOOM,
+        MAXIMUM_ZOOM,
       );
-    if (!currentPointer) {
+      setView({
+        scale: nextScale,
+        x: center.x - pinch.worldCenter.x * nextScale,
+        y: center.y - pinch.worldCenter.y * nextScale,
+      });
       return;
     }
-    const deltaX =
-      currentPointer.x -
-      dragState.startingPointer.x;
-    const deltaY =
-      currentPointer.y -
-      dragState.startingPointer.y;
-    const movementDistance =
-      Math.hypot(
-        deltaX,
-        deltaY,
-      );
-    if (
-      !isDraggingRef.current &&
-      movementDistance <
-        DRAG_THRESHOLD
-    ) {
-      return;
-    }
+
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    const deltaX = point.x - dragState.startingPointer.x;
+    const deltaY = point.y - dragState.startingPointer.y;
+    if (!isDraggingRef.current && Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD) return;
+
     if (!isDraggingRef.current) {
       isDraggingRef.current = true;
       suppressNextClickRef.current = true;
       setIsDragging(true);
       setHoveredSkillId(null);
-      event.currentTarget.setPointerCapture(
-        event.pointerId,
-      );
     }
     event.preventDefault();
     setView({
-      x:
-        dragState.startingView.x +
-        deltaX,
-      y:
-        dragState.startingView.y +
-        deltaY,
-      scale:
-        dragState.startingView.scale,
+      x: dragState.startingView.x + deltaX,
+      y: dragState.startingView.y + deltaY,
+      scale: dragState.startingView.scale,
     });
   }
 
   function finishPointerInteraction(
     event: ReactPointerEvent<SVGSVGElement>,
   ) {
-    const dragState =
-      dragStateRef.current;
-    if (
-      !dragState ||
-      dragState.pointerId !==
-        event.pointerId
-    ) {
+    activePointersRef.current.delete(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (activePointersRef.current.size < 2) pinchStateRef.current = null;
+    if (activePointersRef.current.size === 1) {
+      const [pointerId, point] = [...activePointersRef.current.entries()][0];
+      dragStateRef.current = {
+        pointerId,
+        startingPointer: point,
+        startingView: { ...view },
+      };
       return;
     }
-    if (
-      event.currentTarget.hasPointerCapture(
-        event.pointerId,
-      )
-    ) {
-      event.currentTarget.releasePointerCapture(
-        event.pointerId,
-      );
-    }
+
     dragStateRef.current = null;
-    if (isDraggingRef.current) {
+    if (activePointersRef.current.size === 0 && isDraggingRef.current) {
       isDraggingRef.current = false;
       setIsDragging(false);
     }
   }
 
-  function handleLostPointerCapture() {
-    dragStateRef.current = null;
-    isDraggingRef.current = false;
-    setIsDragging(false);
+  function handleLostPointerCapture(event: ReactPointerEvent<SVGSVGElement>) {
+    activePointersRef.current.delete(event.pointerId);
+    if (activePointersRef.current.size === 0) {
+      dragStateRef.current = null;
+      pinchStateRef.current = null;
+      isDraggingRef.current = false;
+      setIsDragging(false);
+    }
   }
 
   function handleClickCapture(
@@ -500,6 +526,12 @@ export function SkillTree({
       (toPreview && isSkillPurchased(build, edge.from));
   }
 
+  function usesCompactSearch(): boolean {
+    return window.matchMedia(
+      "(max-width: 900px), (hover: none) and (pointer: coarse) and (max-width: 1366px)",
+    ).matches;
+  }
+
   function focusSearchBonus(bonus: MatchingBonus) {
     if (bonus.skillIds.length === 0) return;
 
@@ -511,13 +543,19 @@ export function SkillTree({
     if (!skill) return;
 
     const nextScale = 2.4;
+    const compactSearch = usesCompactSearch();
+    const svg = svgRef.current;
+    const verticalOffset = compactSearch && svg
+      ? Math.min(170, Math.max(76, svg.clientHeight * 0.16))
+      : 0;
     setFocusedSearchSkillId(nextSkillId);
     setHoveredSkillId(null);
     setView({
       scale: nextScale,
       x: TREE_CENTER - skill.x * nextScale,
-      y: TREE_CENTER - skill.y * nextScale,
+      y: TREE_CENTER + verticalOffset - skill.y * nextScale,
     });
+    if (compactSearch) setMobileSearchResultsOpen(false);
   }
 
   function resetView() {
@@ -571,11 +609,13 @@ export function SkillTree({
           onChange={(event) => {
             setSearchQuery(event.target.value);
             setFocusedSearchSkillId(null);
+            setMobileSearchResultsOpen(true);
           }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setSearchQuery("");
               setFocusedSearchSkillId(null);
+              setMobileSearchResultsOpen(true);
               event.currentTarget.blur();
             }
           }}
@@ -592,10 +632,24 @@ export function SkillTree({
           <button className="skill-search__clear" type="button" onClick={() => {
             setSearchQuery("");
             setFocusedSearchSkillId(null);
+            setMobileSearchResultsOpen(true);
           }} aria-label="Clear bonus search" title="Clear search">×</button>
         ) : null}
         {normalizedSearchQuery && matchingBonuses.length > 0 ? (
-          <div className="skill-search__bonuses">
+          <>
+            <button
+              type="button"
+              className="skill-search__results-toggle"
+              aria-expanded={mobileSearchResultsOpen}
+              aria-controls="skill-search-results"
+              onClick={() => setMobileSearchResultsOpen((open) => !open)}
+            >
+              {mobileSearchResultsOpen ? "Hide results" : "Show results"}
+            </button>
+          <div
+            id="skill-search-results"
+            className={`skill-search__bonuses${mobileSearchResultsOpen ? "" : " skill-search__bonuses--mobile-collapsed"}`}
+          >
             <p className="skill-search__bonuses-title">
               Bonuses found ({matchingBonuses.length})
             </p>
@@ -617,6 +671,7 @@ export function SkillTree({
               ))}
             </ul>
           </div>
+          </>
         ) : null}
       </div>
       <svg

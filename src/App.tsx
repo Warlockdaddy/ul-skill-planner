@@ -394,16 +394,32 @@ function App() {
       </header>
 
       <section className="workspace workspace--three-column">
+        {mobileTotalsOpen || mobileHelpOpen ? (
+          <button
+            type="button"
+            className="mobile-panel-backdrop"
+            aria-label="Close open panel"
+            onClick={() => {
+              setMobileTotalsOpen(false);
+              setMobileHelpOpen(false);
+            }}
+          />
+        ) : null}
         <aside className={`build-panel${mobileTotalsOpen ? " mobile-panel--open" : ""}`}>
           <button
             type="button"
             className="mobile-panel-toggle mobile-section-toggle"
             aria-expanded={mobileTotalsOpen}
             aria-controls="mobile-build-totals-content"
-            onClick={() => setMobileTotalsOpen((open) => !open)}
+            onClick={() => {
+              setMobileTotalsOpen((open) => !open);
+              setMobileHelpOpen(false);
+            }}
           >
             <span>Build Totals</span>
-            <span aria-hidden="true">{mobileTotalsOpen ? "−" : "+"}</span>
+            <span className="mobile-section-toggle__action">
+              {mobileTotalsOpen ? "Close" : "Open"}
+            </span>
           </button>
           <div id="mobile-build-totals-content" className="mobile-collapsible-content">
             <BuildTotals build={build} skills={prototypeSkills} />
@@ -427,10 +443,15 @@ function App() {
             className="mobile-panel-toggle mobile-section-toggle"
             aria-expanded={mobileHelpOpen}
             aria-controls="mobile-planner-help-content"
-            onClick={() => setMobileHelpOpen((open) => !open)}
+            onClick={() => {
+              setMobileHelpOpen((open) => !open);
+              setMobileTotalsOpen(false);
+            }}
           >
             <span>How to use the planner</span>
-            <span aria-hidden="true">{mobileHelpOpen ? "−" : "+"}</span>
+            <span className="mobile-section-toggle__action">
+              {mobileHelpOpen ? "Close" : "Open"}
+            </span>
           </button>
           <div id="mobile-planner-help-content" className="mobile-collapsible-content">
             <section className="instructions">

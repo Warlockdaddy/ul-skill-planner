@@ -115,6 +115,10 @@ function SkillNodeViewComponent({
       aria-pressed={isPurchased}
       tabIndex={0}
     >
+      <circle
+        className="skill-node__hit-target"
+        r={isRoot ? radius + 24 : radius + 19}
+      />
       <circle className="skill-node__selection" r={radius + 8} />
       <circle className="skill-node__body" r={radius} />
       <circle className="skill-node__inner" r={radius - 5} />
