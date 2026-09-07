@@ -354,9 +354,13 @@ export function SkillTree({
     if (!point) return;
 
     activePointersRef.current.set(event.pointerId, point);
-    event.currentTarget.setPointerCapture(event.pointerId);
 
     if (activePointersRef.current.size >= 2) {
+      for (const pointerId of activePointersRef.current.keys()) {
+        if (!event.currentTarget.hasPointerCapture(pointerId)) {
+          event.currentTarget.setPointerCapture(pointerId);
+        }
+      }
       beginPinch();
       return;
     }
@@ -416,6 +420,9 @@ export function SkillTree({
       suppressNextClickRef.current = true;
       setIsDragging(true);
       setHoveredSkillId(null);
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
     }
     event.preventDefault();
     setView({
