@@ -2770,3 +2770,48 @@ input:focus-visible {
     bottom: max(62px, calc(env(safe-area-inset-bottom) + 54px));
   }
 }
+
+/* High-clarity search highlighting */
+.skill-nodes:has(.skill-node--search-match)
+  .skill-node:not(.skill-node--search-match) {
+  opacity: 0.24;
+  filter: saturate(0.35) brightness(0.68);
+}
+
+.skill-node--search-match {
+  opacity: 1;
+  color: #79c9c3;
+  filter: none;
+}
+
+.skill-node--search-match .skill-node__body,
+.skill-node--search-match.skill-node--locked .skill-node__body,
+.skill-node--search-match.skill-node--available .skill-node__body,
+.skill-node--search-match.skill-node--purchased .skill-node__body {
+  fill: #172624;
+  stroke: #79c9c3;
+  stroke-width: 7;
+  filter:
+    drop-shadow(0 0 4px rgba(121, 201, 195, 0.72))
+    drop-shadow(0 0 10px rgba(121, 201, 195, 0.34));
+}
+
+.skill-node--search-match .skill-node__inner {
+  fill: #203431;
+  fill-opacity: 0.92;
+  stroke: rgba(178, 231, 226, 0.76);
+}
+
+.skill-node--search-match .skill-node__symbol-container,
+.skill-node--search-match .skill-symbol-image {
+  opacity: 1;
+  filter: brightness(1.08) contrast(1.08);
+}
+
+.skill-node--selected.skill-node--search-match .skill-node__selection {
+  stroke: #d6c071;
+  stroke-width: 9;
+  filter:
+    drop-shadow(0 0 5px rgba(214, 192, 113, 0.84))
+    drop-shadow(0 0 12px rgba(121, 201, 195, 0.42));
+}
