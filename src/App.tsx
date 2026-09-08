@@ -300,7 +300,7 @@ function App() {
       <header className="top-bar">
         <div className="header-left">
           <div className="project-heading">
-            <h1>UL Skill Planner</h1>
+            <h1>UL Skill Planner 2.7.25</h1>
           </div>
 
           <div className="mobile-quick-status" aria-label="Current build status">

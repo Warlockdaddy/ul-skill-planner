@@ -2815,3 +2815,49 @@ input:focus-visible {
     drop-shadow(0 0 5px rgba(214, 192, 113, 0.84))
     drop-shadow(0 0 12px rgba(121, 201, 195, 0.42));
 }
+
+/* Compact desktop attribute counters: colored initial plus value only. */
+@media (min-width: 1181px) {
+  .header-left .attribute-summary {
+    flex: 0 0 auto;
+    width: auto;
+    overflow: visible;
+  }
+
+  .header-left .attribute-summary__item {
+    flex: 0 0 auto;
+    grid-template-columns: 30px 34px;
+    width: 64px;
+    min-width: 64px;
+    max-width: 64px;
+  }
+
+  .header-left .attribute-summary__label {
+    display: none;
+  }
+
+  .header-left .attribute-summary__value {
+    display: grid;
+    height: 100%;
+    padding: 0;
+    place-items: center;
+    font-size: 1rem;
+    text-align: center;
+  }
+}
+
+/* Final desktop header alignment. */
+@media (min-width: 1181px) {
+  .top-bar {
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 12px;
+  }
+
+  .header-right {
+    justify-content: flex-start;
+  }
+
+  .header-right .level-controls {
+    margin-left: auto;
+  }
+}
